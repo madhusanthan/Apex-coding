@@ -1,0 +1,37 @@
+trigger LeadDisqualification on Lead (before insert,before update) { 	
+    	
+    	String testValue = 'test';
+    	
+    	//Step 1: Find leads with 'test' in their names
+    	List<lead> leadsToDisqualify = new List<lead>();
+        for(Lead myLead : trigger.new){ 
+			System.debug('Checking to see if '+myLead.FirstName+ 'and '+ myLead.LastName+ ' contains '  +testValue);
+            //Checking to see if the test value is in the Name field
+            if(myLead.LastName != null && myLead.lastName.equalsIgnoreCase(testValue) 
+               || myLead.FirstName != null && myLead.FirstName.equalsIgnoreCase(testValue)){
+              	leadsToDisqualify.add(myLead);
+            } 
+        }
+    	
+    	//Step 2: Disqualify Leads
+        for(Lead disqualifyLead : leadsToDisqualify){
+            disqualifyLead.Status = 'Disqualified';
+        }
+}
+
+====================================================================================================================
+//Test class
+@isTest
+private class LeadDisqualificationTest {
+    
+    @isTest static void createLeadWithName(){
+        Lead myLead = new Lead();
+        myLead.LastName = 'TEST';
+        myLead.Company = 'Google';
+        insert myLead;
+        
+        System.debug('Lead ' +Lead.Id+ ' created with Last Name');
+        
+    }
+
+}
