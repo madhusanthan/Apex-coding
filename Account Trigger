@@ -1,0 +1,125 @@
+//Trigger Handler
+public class AccountTriggerHandler {
+    
+    public static void handleBeforeInsert (List<Account> AccList){
+        for(Account a: AccList){
+            	System.debug('Hello World');
+               a.Description = 'New Description from Trigger';
+        	if(a.Match_Billing_Address__c==true && a.BillingPostalCode!=Null){
+            a.ShippingPostalCode = a.BillingPostalCode;
+        	}
+        	else if(a.Name == 'ERROR ACCOUNT'){
+            a.addError('This account cannot be added!');
+        	}
+        }
+        
+    }
+	
+     public static void handleAfterInsert (List<Account> AccList){
+         List<Opportunity> myOppList = new List<Opportunity>();
+
+        for(Account a: [Select Id, Name from Account 
+                        Where Id In :AccList and Id Not In (Select AccountId from Opportunity)]){
+                        
+            myOppList.add(new Opportunity(Name= a.Name+ ' Opportunity',
+                         					StageName = 'Prospecting',
+                                         CloseDate = System.today().addMonths(1),
+                                         AccountId = a.Id));
+        	}
+        
+            if(myOppList.size()>0) {
+                insert myOppList;
+            }
+         List<Task> myTask = new List<Task>();
+        for(Account a:  AccList){
+        Task aTask = new Task();
+        aTask.OwnerId = a.OwnerId;
+        aTask.Subject = 'New Task Auto trigger';
+        aTask.Priority = 'Normal';
+        aTask.whatId = a.id;   
+             myTask.add(aTask);
+         }  
+             insert myTask;
+    	}
+
+        
+    public static void handleBeforeUpdate (List<Account> AccList){
+        for(Account a: AccList){
+        if(a.Match_Billing_Address__c==true && a.BillingPostalCode!=Null){
+            a.ShippingPostalCode = a.BillingPostalCode;
+       	 }
+        }
+        
+    }
+             
+    public static void HandleAfterUpdate (List<Account> AccList){
+         List<Opportunity> myOppList = new List<Opportunity>();
+
+        for(Account a: [Select Id, Name from Account 
+                        Where Id In :AccList and Id Not In (Select AccountId from Opportunity)]){
+                        
+            myOppList.add(new Opportunity(Name= a.Name+ ' Opportunity',
+                         					StageName = 'Prospecting',
+                                         CloseDate = System.today().addMonths(1),
+                                         AccountId = a.Id));
+        }
+        
+        if(myOppList.size()>0) {
+            insert myOppList;
+         }  
+    }
+ 
+    
+    public static void HandleBeforeDelete (List<Account> AccList){
+      for(Account a: [Select ID From Account where ID in (Select AccountId from Opportunity) AND ID in :AccList]){      
+        Trigger.oldMap.get(a.Id).addError('Cannot delete Account with related opportunities.');  
+        }
+	}
+}
+
+//Trigger
+trigger AccountTrigger on Account (before insert,before update, before delete,after insert, after update) {
+    if(Trigger.isBefore && Trigger.isInsert){
+		AccountTriggerHandler.handleBeforeInsert(Trigger.New);
+    }
+    else if(Trigger.isAfter && Trigger.isInsert){
+        AccountTriggerHandler.handleAfterInsert(Trigger.New);
+    }
+    
+    else if(Trigger.isBefore && Trigger.isUpdate){
+        AccountTriggerHandler.handleBeforeUpdate(Trigger.New);
+    }
+    
+     else if(Trigger.isAfter && Trigger.isUpdate){
+        AccountTriggerHandler.handleAfterUpdate(Trigger.New);
+    }
+    
+      else if(Trigger.isBefore && Trigger.isDelete){
+        AccountTriggerHandler.handleBeforeDelete(Trigger.old);
+    }
+    
+}
+
+//Test Class for the TriggerHandler
+@isTest
+public class AccountTriggerHandlerTest {
+    
+    @isTest static void InsertTest(){
+        Account acc = new Account(name = 'Test Account', Match_Billing_Address__c = true,BillingPostalCode ='08873');
+        
+        Test.startTest();
+        insert acc;
+        Test.stopTest();
+        Account insertedAcc = [Select id, Name, Description,BillingPostalCode,ShippingPostalCode from Account where id =:acc.id];
+        Opportunity insertedOpp = [Select id, Name, StageName,AccountId from Opportunity where AccountId = :acc.id];
+           Task insertedTask = [Select id, Subject from Task where Whatid = :acc.id];
+        System.assertEquals('Test Account',insertedAcc.Name);
+        System.assertEquals('New Description from Trigger',insertedAcc.Description);
+        System.assertEquals(insertedAcc.BillingPostalCode,insertedAcc.ShippingPostalCode);
+        System.assertEquals('Test Account Opportunity', insertedOpp.Name);
+        System.assertEquals('Prospecting', insertedOpp.StageName);
+        System.assertEquals('New Task Auto trigger', insertedTask.Subject);
+        
+    }
+
+}
