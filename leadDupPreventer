@@ -42,6 +42,9 @@ trigger leadDuplicatePreventer on Lead (before insert, before update,after inser
 	    insert tasklist;    
     }
 }
+--------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+//Test Class for the same
 
 @isTest
 public class leadDupPreventerTest {
