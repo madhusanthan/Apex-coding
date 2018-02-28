@@ -1,0 +1,59 @@
+trigger LeadingCompetitor on Opportunity (before insert,before update) {
+        for(Opportunity opp : Trigger.new){
+            //Add all our prices in a list in order of competition
+            List<Decimal> competitorPrices = new List<Decimal>();
+            competitorPrices.add(opp.Competitor_1_Price__c);
+            competitorPrices.add(opp.Competitor_2_Price__c);
+            competitorPrices.add(opp.Competitor_3_Price__c);
+            //Add all our names in a list in order of competition
+            List<String> competitors = new List<String>();
+            competitors.add(opp.Competitor_1__c);
+            competitors.add(opp.Competitor_2__c);
+            competitors.add(opp.Competitor_3__c);
+            
+            //Loop through competitor prices to find the lowest price
+            Decimal lowestPrice;
+            Decimal HighestPrice;
+            Integer lowestPricePosition;
+            Integer HighestPricePosition;
+            for(Integer i =0;i < competitorPrices.size();i++){  
+                Decimal currentPrice = competitorPrices.get(i);
+                if(HighestPrice==null||currentPrice > HighestPrice){
+                    HighestPrice = currentPrice;
+                    HighestPricePosition = i;
+                }
+                
+            }
+    		//populate the leading competitor field with the competitor matching the lowest price position
+    		opp.Leading_Competitor__c = competitors.get(HighestPricePosition);
+            opp.Leading_Competitor_Price__c = HighestPrice;
+        }
+}
+
+==============================================================================================================
+//test class
+@isTest
+private class LeadingCompetitorTest {
+
+    @isTest static void createOppWithCompetitors(){
+        //Create an opportunity and set required fields
+        Opportunity opp = new Opportunity();
+        opp.Name = 'Big Deal';
+        opp.CloseDate = Date.today();
+        opp.StageName ='Prospecting';
+        
+        //Set competitor price fields
+        opp.Competitor_1_Price__c = 10000;
+        opp.Competitor_2_Price__c =  5000;
+       	opp.Competitor_3_Price__c =  2000;
+        
+        //Set Competitor fields
+        opp.Competitor_1__c = 'Salesforce';
+        opp.Competitor_2__c =  'Google';
+        opp.Competitor_3__c = 'Microsoft';
+       
+        insert opp;
+       	System.debug('Opportunity' + opp.Name + 'inserted with all competitors fields populated');
+        
+    }
+}
