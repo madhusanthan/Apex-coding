@@ -76,7 +76,7 @@ public class AccountTriggerHandler {
         }
 	}
 }
-
+=====================================================================================================================
 //Trigger
 trigger AccountTrigger on Account (before insert,before update, before delete,after insert, after update) {
     if(Trigger.isBefore && Trigger.isInsert){
@@ -99,7 +99,7 @@ trigger AccountTrigger on Account (before insert,before update, before delete,af
     }
     
 }
-
+=====================================================================================================================
 //Test Class for the TriggerHandler
 @isTest
 public class AccountTriggerHandlerTest {
