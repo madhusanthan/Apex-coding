@@ -42,3 +42,29 @@ trigger leadDuplicatePreventer on Lead (before insert, before update,after inser
 	    insert tasklist;    
     }
 }
+
+@isTest
+public class leadDupPreventerTest {
+
+    @isTest static void LeadInsertTest(){
+        Lead l = new Lead(firstname = 'Henry',LastName ='Joe',Company ='Google',Email='john@doe.com');
+        try {
+        Test.startTest();
+        insert l;
+        Lead lCloneCopy  = l.clone(false, false, false, false);
+		insert lCloneCopy;
+      	}
+        catch(Exception error) {
+        System.assert(error.getMessage().contains('Insert failed.'));
+        System.assert(error.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'));
+        System.assert(error.getMessage().contains('A lead with this email address already exists.'));
+		}	
+       
+       Lead lead = new Lead(firstname = 'Jane',LastName ='Dow',Company ='ABME',Email='jane@doe.com'); 
+        insert lead;
+        Test.stopTest();
+       Task task = [Select id,Description,Subject from Task where whoId = :lead.id];
+       System.assertEquals('Call this lead',task.Description);
+        System.assertEquals('New Lead', task.Subject);
+		}
+}
