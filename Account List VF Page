@@ -1,0 +1,37 @@
+<apex:page standardController="Account" recordSetVar="accounts">
+    <apex:form >
+        <apex:pageBlock title="Account List"> 
+            <apex:inputField value="{!Account.Rating}"/>
+            <apex:commandButton action="{!save}" value="Update Rating"/>
+            
+            <!--comment out the select List if we want to use this for edititng the rating-->
+              <!-- <apex:selectList value="{!filterID}" size="1"> 
+                <apex:selectOptions value="{!listViewOptions}" />
+                </apex:selectList>
+                    <apex:commandButton action="{!first}" value="Go"/>-->
+                    <!--comment out the select List if we want to use this for edititng the rating-->
+                      <apex:pageBlockTable value="{!accounts}" var="a">
+                       <!--  <apex:pageBlockTable value="{!selected}" var="a"> 
+                       for showing only the checked/selected accounts in the list view (create a button in List view and update the content source page, 
+                       when the accounts are selected and clicked on this custom button, it will take the control to this visual force page  -->
+                            <apex:column >
+                                <apex:facet name="header">
+                                Account Name
+                                </apex:facet>
+                                <apex:facet name="footer">
+                                End of Table
+                                </apex:facet>
+                                    <apex:outputText value="{!a.name}"/>
+                            </apex:column>
+                            <apex:column >
+                                <apex:facet name="header">
+                                Rating
+                                </apex:facet>
+                                    <apex:outputText value="{!a.rating}"/>
+                            </apex:column>
+                 </apex:pageBlockTable>
+                 <apex:commandLink action="{!previous}">Previous</apex:commandLink>&nbsp;
+                    <apex:commandLink action="{!next}">Next</apex:commandLink>
+        </apex:pageBlock>
+      </apex:form>
+</apex:page>
