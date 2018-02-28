@@ -1,0 +1,38 @@
+trigger WarrantySummary on Case (after insert) {
+    
+    for(Case myCase : trigger.new) {
+        if(myCase.Product_Purchase_Date__c != null 
+           && myCase.Product_Total_Warranty_Days__c != null
+           && myCase.Product_Has_Extended_Warranty__c != null){
+               
+                String purchaseDate         = myCase.Product_Purchase_Date__c.format();
+                String createdDate          = DateTime.now().format();
+                Integer warrantyDays        = myCase.Product_Total_Warranty_Days__c.intValue();
+                Decimal warrantyPercentage  = (100 * (myCase.Product_Purchase_Date__c.daysBetween(Date.Today())/myCase.Product_Total_Warranty_Days__c)).setScale(2);
+                Boolean hasExtendedWarranty = myCase.Product_Has_Extended_Warranty__c;
+    
+                myCase.Warranty_Summary__c  = 'Product purchased on ' + purchaseDate +' ' 
+                                              + 'and case created on ' + createdDate + '.\n'
+                                              + 'Warranty is for ' + warrantyDays +' '
+                                              + 'and is '+ warrantyPercentage + '% through its warranty period.\n'
+                                              + 'Extended warranty: ' + hasExtendedWarranty + '\n'
+                                              + 'Have a nice day!'; 
+        }
+             
+    }
+
+}
+
+====================================================================================================================
+@isTest
+private class WarrantySummaryTest {
+
+    @isTest static void createCase() {
+        Case myCase = new Case();
+        myCase.Product_Purchase_Date__c = Date.today();
+        myCase.Product_Total_Warranty_Days__c = 10;
+        myCase.Product_Has_Extended_Warranty__c = false;
+        myCase.Origin = 'Phone';
+        insert myCase;
+    }
+}
